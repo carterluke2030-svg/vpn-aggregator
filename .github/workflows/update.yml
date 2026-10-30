@@ -1,0 +1,28 @@
+name: update
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: update
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install sing-box
+        run: |
+          V=1.11.4
+          curl -sL https://github.com/SagerNet/sing-box/releases/download/v$V/sing-box-$V-linux-amd64.tar.gz | tar xz
+          sudo mv sing-box-$V-linux-amd64/sing-box /usr/local/bin/
+      - run: python build/main.py
+      - name: Commit output
+        run: |
+          git config user.name bot
+          git config user.email bot@users.noreply.github.com
+          git add out
+          git diff --cached --quiet || (git commit -m "update configs" && git push)
