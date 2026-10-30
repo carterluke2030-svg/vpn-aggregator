@@ -18,7 +18,6 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          SUB_URL: ${{ vars.SUB_URL }}
       - name: Save state
         run: |
           git config user.name bot

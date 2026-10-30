@@ -1,0 +1,29 @@
+name: post-sub
+on:
+  schedule:
+    - cron: "30 5 * * *"   # 09:00 Tehran
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: post-sub
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python build/sub_link.py new
+      - name: Publish link file
+        run: |
+          git config user.name bot
+          git config user.email bot@users.noreply.github.com
+          git add out state
+          git commit -m "new subscription link"
+          for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
+      - run: python build/sub_link.py post

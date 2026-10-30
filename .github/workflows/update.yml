@@ -20,9 +20,15 @@ jobs:
           curl -sL https://github.com/SagerNet/sing-box/releases/download/v$V/sing-box-$V-linux-amd64.tar.gz | tar xz
           sudo mv sing-box-$V-linux-amd64/sing-box /usr/local/bin/
       - run: python build/main.py
+      - run: python build/sub_link.py refresh
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
       - name: Commit output
         run: |
           git config user.name bot
           git config user.email bot@users.noreply.github.com
-          git add out
-          git diff --cached --quiet || (git commit -m "update configs" && git push)
+          git add out state
+          if ! git diff --cached --quiet; then
+            git commit -m "update configs"
+            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
+          fi

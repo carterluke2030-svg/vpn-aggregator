@@ -1,6 +1,8 @@
 import base64
 import json
 
+from brand import remark, rename
+
 URLTEST_INTERVAL = "30s"
 
 
@@ -23,5 +25,7 @@ def singbox(outbounds):
 
 
 def write(links, outbounds, outdir):
+    links = [rename(l, remark(i + 1)) for i, l in enumerate(links)]
+    outbounds = [{**o, "tag": remark(i + 1)} for i, o in enumerate(outbounds)]
     open(f"{outdir}/sub.txt", "w").write(sub_txt(links))
     json.dump(singbox(outbounds), open(f"{outdir}/singbox.json", "w"), ensure_ascii=False)
