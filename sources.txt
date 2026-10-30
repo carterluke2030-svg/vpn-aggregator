@@ -12,11 +12,6 @@ url:https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/all/conf
 url:https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/super-sub.txt
 url:https://raw.githubusercontent.com/MatinGhanbari/v2ray-configs/main/subscriptions/v2ray/all_sub.txt
 
-# --- Epodonios/v2ray-configs (every ~5 min) ---
-url:https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/Sub1.txt
-url:https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/Sub2.txt
-url:https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/Sub3.txt
-url:https://raw.githubusercontent.com/Epodonios/v2ray-configs/refs/heads/main/Sub4.txt
 
 # --- MahanKenway/Freedom-V2Ray (every ~2 h, Iran-focused) ---
 url:https://raw.githubusercontent.com/MahanKenway/Freedom-V2Ray/main/configs/mix_sub.txt
