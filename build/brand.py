@@ -7,7 +7,7 @@ CHANNEL = os.environ.get("CHANNEL", "@BlueRay_VPN")
 
 
 def remark(n):
-    return f"🔵 {CHANNEL} | {n}"
+    return f"🔵 {CHANNEL} ⚡ کانفیگ جدید هر ۳ ساعت | {n}"
 
 
 def rename(link, name):

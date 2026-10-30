@@ -39,17 +39,26 @@ def main():
         if k not in posted and k not in seen:
             seen.add(k)
             fresh.append(l)
-    fresh = fresh[:COUNT]
-    if not fresh:
-        print("nothing new to post")
-        return
-    # One <pre> block: a single tap copies all links; lines don't wrap, so the post stays short.
-    block = "\n".join(rename(l, remark(i + 1)) for i, l in enumerate(fresh))
-    text = (f"🔵 <b>{len(fresh)} کانفیگ جدید</b>\n"
-            "با یک ضربه روی کادر، همه‌ی کانفیگ‌ها کپی می‌شوند ← در برنامه «افزودن از کلیپ‌بورد» را بزنید\n"
-            f"<pre>{html.escape(block)}</pre>\n"
-            f"📢 {html.escape(CHANNEL)} | برای کانفیگ‌های تازه هر چند ساعت سر بزنید")
-    send(text)
+    # Keep the whole message under Telegram's 4096-char limit.
+    chosen, size = [], 0
+    for l in fresh[:COUNT]:
+        line = rename(l, remark(len(chosen) + 1))
+        if size + len(line) + 1 > 2900 and chosen:
+            break
+        chosen.append(line)
+        size += len(line) + 1
+    fresh = fresh[:len(chosen)]
+    # Collapsed quote (3 lines) holding one <code> span: one tap copies every config.
+    text = (f"🔵 <b>{len(chosen)} کانفیگ جدید | BlueRay VPN</b>\n"
+            f"<blockquote expandable><code>{html.escape(chr(10).join(chosen))}</code></blockquote>\n"
+            "👆 روی کادر بزنید تا همه‌ی کانفیگ‌ها یکجا کپی شوند، بعد در برنامه «افزودن از کلیپ‌بورد» را بزنید\n\n"
+            "🚀 سرعت بالا | 📶 مناسب همه‌ی اپراتورها\n"
+            "⚠️ اگر یکی وصل نشد، چند کانفیگ دیگر را هم امتحان کنید\n"
+            "❤️ اگر به کارتان آمد، برای دوستانتان بفرستید\n"
+            "🔔 اعلان کانال را روشن کنید تا کانفیگ جدید را از دست ندهید\n\n"
+            f"📢 {html.escape(CHANNEL)}")
+    r = send(text)
+    print([e['type'] for e in r['result'].get('entities', [])], r['result']['message_id'])
     for l in fresh:
         posted[key(l)] = now
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
