@@ -22,15 +22,26 @@ jobs:
       - run: python build/main.py
         env:
           PERSONAL_ID: ${{ secrets.PERSONAL_ID }}
-      - run: python build/sub_link.py refresh
+      - name: Commit output
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
-      - name: Commit output
         run: |
           git config user.name bot
           git config user.email bot@users.noreply.github.com
-          git add out state
-          if ! git diff --cached --quiet; then
-            git commit -m "update configs"
-            for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
-          fi
+          # build output is regenerated wholesale, so rebase onto the latest main
+          # and lay our files on top instead of merging
+          keep=$RUNNER_TEMP/keep
+          mkdir -p $keep/out $keep/state
+          cp -r out/sub.txt out/singbox.json out/me $keep/out/ 2>/dev/null || true
+          cp state/history.json $keep/state/ 2>/dev/null || true
+          for i in 1 2 3 4 5; do
+            git fetch -q origin main && git reset -q --hard origin/main
+            cp -r $keep/out/. out/ && cp -r $keep/state/. state/
+            python build/sub_link.py refresh
+            git add out state
+            git diff --cached --quiet && exit 0
+            git commit -qm "update configs"
+            git push && exit 0
+            sleep 10
+          done
+          exit 1
