@@ -20,6 +20,8 @@ jobs:
           curl -sL https://github.com/SagerNet/sing-box/releases/download/v$V/sing-box-$V-linux-amd64.tar.gz | tar xz
           sudo mv sing-box-$V-linux-amd64/sing-box /usr/local/bin/
       - run: python build/main.py
+        env:
+          PERSONAL_ID: ${{ secrets.PERSONAL_ID }}
       - run: python build/sub_link.py refresh
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
