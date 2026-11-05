@@ -15,7 +15,7 @@ STATE = os.path.join(ROOT, "state", "posted.json")
 COUNT = int(os.environ.get("POST_COUNT", "10"))
 HOLD_HOURS = 24
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHAT = os.environ["TELEGRAM_CHAT_ID"]
+CHATS = [c.strip() for c in os.environ["TELEGRAM_CHAT_ID"].split(",") if c.strip()]
 
 
 def key(link):
@@ -23,8 +23,8 @@ def key(link):
     return f"{u.scheme}://{u.hostname}:{u.port}"
 
 
-def send(text):
-    data = up.urlencode({"chat_id": CHAT, "text": text, "parse_mode": "HTML",
+def send(chat, text):
+    data = up.urlencode({"chat_id": chat, "text": text, "parse_mode": "HTML",
                          "disable_web_page_preview": "true"}).encode()
     with urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data, timeout=30) as r:
         return json.load(r)
@@ -82,8 +82,16 @@ def main():
         lines.append(f"📚 آموزش اتصال: {html.escape(os.environ['TUTORIAL_URL'])}")
     lines.append(f"📢 {html.escape(CHANNEL)}")
     text = "\n".join(lines)
-    r = send(text)
-    print([e['type'] for e in r['result'].get('entities', [])], r['result']['message_id'])
+    sent = 0
+    for chat in CHATS:
+        try:
+            r = send(chat, text)
+            print(chat, [e['type'] for e in r['result'].get('entities', [])], r['result']['message_id'])
+            sent += 1
+        except Exception as e:
+            print(f"failed {chat}: {e}")
+    if not sent:
+        raise SystemExit(1)
     for l in fresh:
         posted[key(l)] = now
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
