@@ -5,6 +5,7 @@ import os
 import socket
 import time
 import urllib.parse as up
+import urllib.error
 import urllib.request
 
 from brand import CHANNEL, rename, remark
@@ -26,8 +27,16 @@ def key(link):
 def send(chat, text):
     data = up.urlencode({"chat_id": chat, "text": text, "parse_mode": "HTML",
                          "disable_web_page_preview": "true"}).encode()
-    with urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data, timeout=30) as r:
-        return json.load(r)
+    for i in range(4):
+        try:
+            with urllib.request.urlopen(f"https://api.telegram.org/bot{TOKEN}/sendMessage", data, timeout=60) as r:
+                return json.load(r)
+        except urllib.error.HTTPError:
+            raise
+        except Exception:
+            if i == 3:
+                raise
+            time.sleep(5)
 
 
 FA = {"DE": "آلمان", "US": "آمریکا", "NL": "هلند", "GB": "انگلیس", "FR": "فرانسه", "FI": "فنلاند", "SE": "سوئد",
@@ -64,28 +73,28 @@ def main():
             seen.add(k)
             fresh.append(l)
     # Keep the whole message under Telegram's 4096-char limit.
-    chosen, size = [], 0
+    count, size = 0, 0
     for l in fresh[:COUNT]:
-        line = rename(l, remark(len(chosen) + 1))
-        if size + len(line) + 1 > 2900 and chosen:
+        n = len(rename(l, remark(count + 1, max(CHATS, key=len)))) + 1
+        if size + n > 2900 and count:
             break
-        chosen.append(line)
-        size += len(line) + 1
-    fresh = fresh[:len(chosen)]
-    # Collapsed quote (3 lines) holding one <code> span: one tap copies every config.
+        count += 1
+        size += n
+    fresh = fresh[:count]
     places = list(dict.fromkeys(c for c in map(country, fresh) if c))
-    lines = [f"🔵 <b>{len(chosen)} کانفیگ جدید | BlueRay VPN</b>",
-             f"<blockquote expandable><code>{html.escape(chr(10).join(chosen))}</code></blockquote>"]
-    if places:
-        lines.append("🌍 " + " · ".join(f"{f} {n}" for f, n in places))
-    if os.environ.get("TUTORIAL_URL"):
-        lines.append(f"📚 آموزش اتصال: {html.escape(os.environ['TUTORIAL_URL'])}")
-    lines.append(f"📢 {html.escape(CHANNEL)}")
-    text = "\n".join(lines)
     sent = 0
     for chat in CHATS:
+        # Collapsed quote holding one <code> span: one tap copies every config.
+        chosen = [rename(l, remark(i + 1, chat)) for i, l in enumerate(fresh)]
+        lines = [f"🔵 <b>{len(chosen)} کانفیگ جدید | {html.escape(chat.lstrip('@'))}</b>",
+                 f"<blockquote expandable><code>{html.escape(chr(10).join(chosen))}</code></blockquote>"]
+        if places:
+            lines.append("🌍 " + " · ".join(f"{f} {n}" for f, n in places))
+        if os.environ.get("TUTORIAL_URL"):
+            lines.append(f"📚 آموزش اتصال: {html.escape(os.environ['TUTORIAL_URL'])}")
+        lines.append(f"📢 {html.escape(chat)}")
         try:
-            r = send(chat, text)
+            r = send(chat, "\n".join(lines))
             print(chat, [e['type'] for e in r['result'].get('entities', [])], r['result']['message_id'])
             sent += 1
         except Exception as e:
